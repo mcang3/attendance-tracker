@@ -1,0 +1,24 @@
+{
+  "name": "Course Attendance Tracker",
+  "short_name": "Attendance",
+  "description": "Track course attendance offline with automatic syncing",
+  "start_url": "/attendance-tracker.html",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#1a365d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%231a365d' width='192' height='192' rx='32'/%3E%3Cpath fill='%23fff' d='M96 48c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16-7.2-16-16-16zm0 48c-17.6 0-32 14.4-32 32v24h64v-24c0-17.6-14.4-32-32-32z'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%231a365d' width='512' height='512' rx='96'/%3E%3Cpath fill='%23fff' d='M256 128c-23.5 0-42.7 19.2-42.7 42.7s19.2 42.7 42.7 42.7 42.7-19.2 42.7-42.7S279.5 128 256 128zm0 128c-47.1 0-85.3 38.3-85.3 85.3V384h170.7v-42.7c0-47-38.3-85.3-85.4-85.3z'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Course Attendance Tracker - Works Offline">
+    <meta name="theme-color" content="#1a365d">
+    <link rel="manifest" href="manifest.json">
+    <title>Course Attendance Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2c5282;
+            --primary-dark: #1a365d;
+            --primary-light: #4299e1;
+            --secondary: #ed8936;
+            --success: #38a169;
+            --warning: #d69e2e;
+            --error: #e53e3e;
+            --bg-main: #f7fafc;
+            --bg-card: #ffffff;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .status-bar {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow-md);
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.offline {
+            background: var(--warning);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            flex: 1;
+        }
+
+        .pending-count {
+            background: var(--secondary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: var(--shadow-lg);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h1 {
+            font-family: 'Literata', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 28px;
+            animation: fadeIn 0.5s ease-out backwards;
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.15s; }
+        .form-group:nth-child(3) { animation-delay: 0.2s; }
+        .form-group:nth-child(4) { animation-delay: 0.25s; }
+        .form-group:nth-child(5) { animation-delay: 0.3s; }
+        .form-group:nth-child(6) { animation-delay: 0.35s; }
+        .form-group:nth-child(7) { animation-delay: 0.4s; }
+        .form-group:nth-child(8) { animation-delay: 0.45s; }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 15px;
+        }
+
+        .question-number {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 13px;
+            margin-right: 8px;
+            font-weight: 700;
+        }
+
+        .helper-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-style: italic;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.3s ease;
+            background: var(--bg-main);
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.1);
+            transform: translateY(-1px);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.6;
+        }
+
+        select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%234a5568' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            appearance: none;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .radio-option {
+            position: relative;
+            padding: 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-main);
+        }
+
+        .radio-option:hover {
+            border-color: var(--primary-light);
+            background: white;
+            transform: translateX(4px);
+        }
+
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            color: var(--primary);
+        }
+
+        .radio-option input[type="radio"]:checked ~ .checkmark {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .radio-option input[type="radio"]:checked ~ .checkmark::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .radio-option.selected {
+            border-color: var(--primary);
+            background: rgba(66, 153, 225, 0.05);
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .checkmark {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .checkmark::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+            margin-top: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .submit-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 400px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .toast-icon {
+            font-size: 24px;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .korean-text {
+            font-weight: 400;
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
+            .card {
+                padding: 24px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .subtitle {
+                font-size: 13px;
+            }
+        }
+
+        .sync-animation {
+            animation: rotate 1s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .form-section {
+            transition: all 0.3s ease;
+        }
+
+        input:invalid:not(:placeholder-shown) {
+            border-color: var(--error);
+        }
+
+        input:valid:not(:placeholder-shown) {
+            border-color: var(--success);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-bar">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <span class="status-text" id="statusText">Online - Ready to submit</span>
+            <span class="pending-count hidden" id="pendingCount">0 pending</span>
+        </div>
+
+        <div class="card">
+            <div class="header">
+                <h1>Course Attendance</h1>
+                <p class="subtitle">Please fill out all required fields</p>
+            </div>
+
+            <form id="attendanceForm">
+                <!-- Question 1: Lecture Section -->
+                <div class="form-group">
+                    <label>
+                        <span class="question-number">1</span>
+                        What is your lecture section?
+                    </label>
+                    <div class="radio-group">
+                        <div class="radio-option" onclick="selectRadio(this, 'lecture', 'ST')">
+                            <input type="radio" name="lecture" value="ST TTh 8-9 am" id="lecture_st" required>
+                            <label for="lecture_st" class="radio-label">
+                                <span class="checkmark"></span>
+                                ST TTh 8-9 am
+                            </label>
+                        </div>
+                        <div class="radio-option" onclick="selectRadio(this, 'lecture', 'AB')">
+                            <input type="radio" name="lecture" value="AB WF 8-9 am" id="lecture_ab" required>
+                            <label for="lecture_ab" class="radio-label">
+                                <span class="checkmark"></span>
+                                AB WF 8-9 am
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 2: Lab Section (ST) -->
+                <div class="form-group hidden" id="labST">
+                    <label>
+                        <span class="question-number">2</span>
+                        What is your laboratory section under ST?
+                    </label>
+                    <select name="lab_st" id="lab_st_select">
+                        <option value="">-- Select your lab section --</option>
+                        <option value="ST-1L M 9 am-12 nn">ST-1L M 9 am-12 nn</option>
+                        <option value="ST-2L M 1-4 pm">ST-2L M 1-4 pm</option>
+                        <option value="ST-3L T 9-12 am">ST-3L T 9-12 am</option>
+                        <option value="ST-4L W 4-7 pm">ST-4L W 4-7 pm</option>
+                        <option value="ST-5L T 4-7 pm">ST-5L T 4-7 pm</option>
+                    </select>
+                </div>
+
+                <!-- Question 3: Lab Section (AB) -->
+                <div class="form-group hidden" id="labAB">
+                    <label>
+                        <span class="question-number">3</span>
+                        What is your laboratory section under AB?
+                    </label>
+                    <select name="lab_ab" id="lab_ab_select">
+                        <option value="">-- Select your lab section --</option>
+                        <option value="AB-1L F 9 am-12 nn">AB-1L F 9 am-12 nn</option>
+                        <option value="AB-2L M 4-7 pm">AB-2L M 4-7 pm</option>
+                        <option value="AB-3L W 9 am-12 nn">AB-3L W 9 am-12 nn</option>
+                        <option value="AB-4L Th 9 am-12 nn">AB-4L Th 9 am-12 nn</option>
+                    </select>
+                </div>
+
+                <!-- Question 4: Full Name -->
+                <div class="form-group">
+                    <label>
+                        <span class="question-number">4</span>
+                        Please indicate your FULL NAME
+                    </label>
+                    <input 
+                        type="text" 
+                        name="full_name" 
+                        id="full_name" 
+                        placeholder="Last, Given, Middle Initial"
+                        required
+                    >
+                    <p class="helper-text">Example: Ang, Mary Jasmin C.</p>
+                </div>
+
+                <!-- Question 5: Key Insight -->
+                <div class="form-group">
+                    <label>
+                        <span class="question-number">5</span>
+                        What key idea or insight from today's class stood out to you?
+                    </label>
+                    <textarea 
+                        name="key_insight" 
+                        id="key_insight" 
+                        placeholder="One word, phrase, or sentence"
+                        required
+                    ></textarea>
+                </div>
+
+                <!-- Question 6: Questions/Feedback -->
+                <div class="form-group">
+                    <label>
+                        <span class="question-number">6</span>
+                        Do you have any questions, clarifications, or feedback?
+                    </label>
+                    <textarea 
+                        name="questions" 
+                        id="questions" 
+                        placeholder="Instructors will try to address next session"
+                    ></textarea>
+                    <p class="helper-text">Optional - leave blank if none</p>
+                </div>
+
+                <!-- Question 7: 소확행 -->
+                <div class="form-group">
+                    <label>
+                        <span class="question-number">7</span>
+                        What was your most recent source of <span class="korean-text">'소확행 (sohwakhaeng)'</span>?
+                    </label>
+                    <textarea 
+                        name="sohwakhaeng" 
+                        id="sohwakhaeng" 
+                        placeholder="A small but certain happiness"
+                        required
+                    ></textarea>
+                </div>
+
+                <!-- Question 8: Dedication -->
+                <div class="form-group">
+                    <label>
+                        <span class="question-number">8</span>
+                        To whom do you dedicate your effort in today's class?
+                    </label>
+                    <textarea 
+                        name="dedication" 
+                        id="dedication" 
+                        placeholder="This can be a person, pet, or any entity that inspired you to be present—including yourself"
+                        required
+                    ></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Submit Attendance
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // Replace with your deployed Apps Script URL
+        const DB_NAME = 'AttendanceDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'pending_submissions';
+
+        let db;
+        let isOnline = navigator.onLine;
+
+        // Initialize IndexedDB for offline storage
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const objectStore = db.createObjectStore(STORE_NAME, { 
+                            keyPath: 'id', 
+                            autoIncrement: true 
+                        });
+                        objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+                        objectStore.createIndex('synced', 'synced', { unique: false });
+                    }
+                };
+            });
+        }
+
+        // Save submission to IndexedDB
+        function saveToIndexedDB(data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.add(data);
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Get pending submissions
+        function getPendingSubmissions() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const index = store.index('synced');
+                const request = index.getAll(false);
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Delete synced submission
+        function deleteSubmission(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(id);
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Update UI based on online/offline status
+        function updateOnlineStatus() {
+            isOnline = navigator.onLine;
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+
+            if (isOnline) {
+                indicator.classList.remove('offline');
+                statusText.textContent = 'Online - Ready to submit';
+                syncPendingSubmissions();
+            } else {
+                indicator.classList.add('offline');
+                statusText.textContent = 'Offline - Submissions will be saved locally';
+            }
+        }
+
+        // Update pending count
+        async function updatePendingCount() {
+            const pending = await getPendingSubmissions();
+            const countEl = document.getElementById('pendingCount');
+            
+            if (pending.length > 0) {
+                countEl.textContent = `${pending.length} pending`;
+                countEl.classList.remove('hidden');
+            } else {
+                countEl.classList.add('hidden');
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠'
+            };
+
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type]}</span>
+                <span class="toast-message">${message}</span>
+            `;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Handle radio button selection and conditional display
+        function selectRadio(element, name, section) {
+            // Remove selected class from all options in this group
+            document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
+                radio.closest('.radio-option').classList.remove('selected');
+            });
+
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            
+            // Check the radio button
+            const radio = element.querySelector('input[type="radio"]');
+            radio.checked = true;
+
+            // Show/hide lab sections based on lecture selection
+            const labST = document.getElementById('labST');
+            const labAB = document.getElementById('labAB');
+            const labSTSelect = document.getElementById('lab_st_select');
+            const labABSelect = document.getElementById('lab_ab_select');
+
+            if (section === 'ST') {
+                labST.classList.remove('hidden');
+                labAB.classList.add('hidden');
+                labSTSelect.required = true;
+                labABSelect.required = false;
+                labABSelect.value = '';
+            } else if (section === 'AB') {
+                labAB.classList.remove('hidden');
+                labST.classList.add('hidden');
+                labABSelect.required = true;
+                labSTSelect.required = false;
+                labSTSelect.value = '';
+            }
+        }
+
+        // Submit to Google Sheets
+        async function submitToGoogleSheets(data) {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            // Note: no-cors mode doesn't allow reading response
+            // We assume success if no error is thrown
+            return true;
+        }
+
+        // Sync pending submissions
+        async function syncPendingSubmissions() {
+            if (!isOnline) return;
+
+            const pending = await getPendingSubmissions();
+            if (pending.length === 0) return;
+
+            const syncIcon = document.getElementById('statusIndicator');
+            syncIcon.classList.add('sync-animation');
+
+            let syncedCount = 0;
+            for (const submission of pending) {
+                try {
+                    await submitToGoogleSheets(submission.data);
+                    await deleteSubmission(submission.id);
+                    syncedCount++;
+                } catch (error) {
+                    console.error('Sync failed for submission:', error);
+                }
+            }
+
+            syncIcon.classList.remove('sync-animation');
+
+            if (syncedCount > 0) {
+                showToast(`${syncedCount} submission(s) synced successfully!`, 'success');
+                await updatePendingCount();
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            const formData = new FormData(e.target);
+            const timestamp = new Date().toISOString();
+
+            const data = {
+                timestamp: timestamp,
+                lecture_section: formData.get('lecture'),
+                lab_section: formData.get('lab_st') || formData.get('lab_ab'),
+                full_name: formData.get('full_name'),
+                key_insight: formData.get('key_insight'),
+                questions: formData.get('questions'),
+                sohwakhaeng: formData.get('sohwakhaeng'),
+                dedication: formData.get('dedication'),
+                submitted_at: new Date().toLocaleString('en-US', { 
+                    timeZone: 'Asia/Manila',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                })
+            };
+
+            try {
+                if (isOnline) {
+                    // Try to submit directly
+                    try {
+                        await submitToGoogleSheets(data);
+                        showToast('Attendance submitted successfully!', 'success');
+                        e.target.reset();
+                        document.querySelectorAll('.radio-option').forEach(el => 
+                            el.classList.remove('selected')
+                        );
+                        document.getElementById('labST').classList.add('hidden');
+                        document.getElementById('labAB').classList.add('hidden');
+                    } catch (error) {
+                        // If online submission fails, save locally
+                        await saveToIndexedDB({ data, synced: false, timestamp });
+                        showToast('Saved locally. Will sync when connection improves.', 'warning');
+                        await updatePendingCount();
+                    }
+                } else {
+                    // Save locally when offline
+                    await saveToIndexedDB({ data, synced: false, timestamp });
+                    showToast('Saved locally. Will sync when you\'re back online.', 'warning');
+                    e.target.reset();
+                    document.querySelectorAll('.radio-option').forEach(el => 
+                        el.classList.remove('selected')
+                    );
+                    document.getElementById('labST').classList.add('hidden');
+                    document.getElementById('labAB').classList.add('hidden');
+                    await updatePendingCount();
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                showToast('Error saving attendance. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Attendance';
+            }
+        });
+
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            updateOnlineStatus();
+            showToast('Back online! Syncing pending submissions...', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            updateOnlineStatus();
+            showToast('You\'re offline. Submissions will be saved locally.', 'warning');
+        });
+
+        // Initialize
+        (async () => {
+            await initDB();
+            updateOnlineStatus();
+            await updatePendingCount();
+            
+            // Try to sync on load if online
+            if (isOnline) {
+                setTimeout(syncPendingSubmissions, 1000);
+            }
+        })();
+
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed'));
+        }
+    </script>
+</body>
+</html>
